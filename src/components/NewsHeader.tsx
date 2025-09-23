@@ -70,13 +70,24 @@ export const NewsHeader = ({
           <div className="max-w-4xl mx-auto px-4">
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
               Stay Informed with
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-white/80">
-                Breaking News
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-200 to-green-200">
+                Indian & Global News
               </span>
             </h2>
             <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
-              Professional news aggregation with intelligent filtering and personalization
+              Professional news from India's leading sources and global publishers
             </p>
+            <div className="flex items-center justify-center gap-6 text-white/80">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🇮🇳</span>
+                <span>Indian News</span>
+              </div>
+              <div className="w-px h-6 bg-white/40"></div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🌍</span>
+                <span>Global News</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

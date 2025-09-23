@@ -14,6 +14,7 @@ export interface Article {
     name: string;
   };
   category?: string;
+  region?: string;
 }
 
 interface NewsCardProps {
@@ -115,11 +116,22 @@ export const NewsCard = ({ article, onSave, onRemove, isSaved, onClick }: NewsCa
 
         {/* Content Section */}
         <div className="p-5">
-          {/* Source and Time */}
+          {/* Source, Region and Time */}
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-primary bg-primary-light px-3 py-1 rounded-full">
-              {article.source.name}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-primary bg-primary-light px-3 py-1 rounded-full">
+                {article.source.name}
+              </span>
+              {article.region && (
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  article.region === 'india' 
+                    ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' 
+                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                }`}>
+                  {article.region === 'india' ? '🇮🇳 India' : '🌍 Global'}
+                </span>
+              )}
+            </div>
             <div className="flex items-center text-muted-foreground caption-text">
               <Clock className="h-3 w-3 mr-1" />
               <span>{formatDate(article.publishedAt)}</span>

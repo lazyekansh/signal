@@ -5,6 +5,7 @@ import { newsApi } from "@/services/newsApi";
 import { Article, NewsCard } from "./NewsCard";
 import { SearchBar } from "./SearchBar";
 import { CategoryFilter } from "./CategoryFilter";
+import { RegionFilter } from "./RegionFilter";
 import { NewsHeader } from "./NewsHeader";
 import { ArticleDetail } from "./ArticleDetail";
 import { LoadingSpinner, LoadingCard } from "./LoadingSpinner";
@@ -14,6 +15,7 @@ export const NewsApp = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [activeRegion, setActiveRegion] = useState("all");
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
@@ -21,18 +23,20 @@ export const NewsApp = () => {
   const { toast } = useToast();
 
   const categories = newsApi.getCategories();
+  const regions = newsApi.getRegions();
 
   // Load articles on component mount and when filters change
   useEffect(() => {
     loadArticles();
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, activeRegion, searchQuery]);
 
   const loadArticles = async () => {
     try {
       setLoading(true);
       const fetchedArticles = await newsApi.getTopHeadlines(
         activeCategory === "all" ? undefined : activeCategory,
-        searchQuery || undefined
+        searchQuery || undefined,
+        activeRegion === "all" ? undefined : activeRegion
       );
       setArticles(fetchedArticles);
     } catch (error) {
@@ -58,6 +62,11 @@ export const NewsApp = () => {
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
     setSearchQuery(""); // Clear search when changing category
+  };
+
+  const handleRegionChange = (region: string) => {
+    setActiveRegion(region);
+    setSearchQuery(""); // Clear search when changing region
   };
 
   const handleSaveArticle = (article: Article) => {
@@ -118,6 +127,15 @@ export const NewsApp = () => {
           </div>
         )}
 
+        {/* Region Filter */}
+        {!showBookmarks && (
+          <RegionFilter
+            regions={regions}
+            activeRegion={activeRegion}
+            onRegionChange={handleRegionChange}
+          />
+        )}
+
         {/* Category Filter */}
         {!showBookmarks && (
           <CategoryFilter
@@ -134,18 +152,28 @@ export const NewsApp = () => {
               ? `Your Bookmarks (${savedArticles.length})`
               : searchQuery 
                 ? `Search Results for "${searchQuery}"`
-                : activeCategory === "all" 
-                  ? "Latest News" 
-                  : `${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} News`
+                : (() => {
+                    const regionText = activeRegion === "all" ? "" : 
+                      activeRegion === "india" ? "Indian " : "Global ";
+                    const categoryText = activeCategory === "all" ? 
+                      "News" : `${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} News`;
+                    return activeRegion === "all" && activeCategory === "all" 
+                      ? "Latest News" 
+                      : `${regionText}${categoryText}`;
+                  })()
             }
           </h2>
           
-          {searchQuery && !showBookmarks && (
+          {(searchQuery || activeRegion !== "all" || activeCategory !== "all") && !showBookmarks && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                setSearchQuery("");
+                setActiveRegion("all");
+                setActiveCategory("all");
+              }}
               className="text-sm text-muted-foreground hover:text-foreground mt-2 underline"
             >
-              Clear search and show all news
+              Clear all filters and show all news
             </button>
           )}
         </div>
