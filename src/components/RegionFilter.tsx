@@ -4,56 +4,24 @@ interface RegionFilterProps {
   onRegionChange: (region: string) => void;
 }
 
-export const RegionFilter = ({
-  regions,
-  activeRegion,
-  onRegionChange,
-}: RegionFilterProps) => {
-  const getRegionDisplay = (region: string) => {
-    switch (region) {
-      case "all":
-        return "🌐 All News";
-      case "india":
-        return "🇮🇳 India";
-      case "global":
-        return "🌍 Global";
-      default:
-        return region.charAt(0).toUpperCase() + region.slice(1);
-    }
+export const RegionFilter = ({ regions, activeRegion, onRegionChange }: RegionFilterProps) => {
+  const label = (r: string) => {
+    if (r === "all") return "🌐 All";
+    if (r === "india") return "🇮🇳 India";
+    if (r === "global") return "🌍 Global";
+    return r;
   };
-
-  const getRegionStyle = (region: string, isActive: boolean) => {
-    const baseStyle = "category-pill transition-all duration-200";
-    
-    if (isActive) {
-      switch (region) {
-        case "india":
-          return `${baseStyle} active bg-gradient-to-r from-orange-500 to-green-500 text-white shadow-lg transform scale-105`;
-        case "global":
-          return `${baseStyle} active bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg transform scale-105`;
-        default:
-          return `${baseStyle} active`;
-      }
-    }
-    
-    return `${baseStyle} hover:shadow-md`;
-  };
-
   return (
-    <div className="flex flex-wrap gap-3 justify-center mb-6">
-      {regions.map((region) => {
-        const isActive = activeRegion === region;
-
-        return (
-          <button
-            key={region}
-            onClick={() => onRegionChange(region)}
-            className={getRegionStyle(region, isActive)}
-          >
-            {getRegionDisplay(region)}
-          </button>
-        );
-      })}
+    <div className="flex flex-wrap gap-1.5">
+      {regions.map((r) => (
+        <button
+          key={r}
+          onClick={() => onRegionChange(r)}
+          className={`category-pill ${activeRegion === r ? "active" : ""}`}
+        >
+          {label(r)}
+        </button>
+      ))}
     </div>
   );
 };
