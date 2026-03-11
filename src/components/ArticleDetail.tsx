@@ -1,6 +1,4 @@
 import { ArrowLeft, Clock, ExternalLink, Bookmark, BookmarkCheck, Share2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Article } from "./NewsCard";
 
 interface ArticleDetailProps {
@@ -11,147 +9,107 @@ interface ArticleDetailProps {
   isSaved: boolean;
 }
 
-export const ArticleDetail = ({ 
-  article, 
-  onBack, 
-  onSave, 
-  onRemove, 
-  isSaved 
-}: ArticleDetailProps) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+export const ArticleDetail = ({ article, onBack, onSave, onRemove, isSaved }: ArticleDetailProps) => {
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-  const handleSaveToggle = () => {
-    if (isSaved) {
-      onRemove(article.id);
-    } else {
-      onSave(article);
-    }
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: article.title,
-        text: article.description,
-        url: article.url,
-      });
-    } else {
-      navigator.clipboard.writeText(article.url);
-    }
-  };
+  const handleSave = () => isSaved ? onRemove(article.id) : onSave(article);
+  const handleShare = () =>
+    navigator.share
+      ? navigator.share({ title: article.title, url: article.url })
+      : navigator.clipboard.writeText(article.url);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 fade-in">
-      {/* Header */}
+    <div className="max-w-2xl mx-auto px-4 py-8 fade-in">
+      {/* Back */}
       <div className="flex items-center justify-between mb-6">
-        <Button
-          variant="ghost"
+        <button
           onClick={onBack}
-          className="hover:bg-muted p-2"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to News
-        </Button>
-        
+          <ArrowLeft className="h-4 w-4" />
+          Back to feed
+        </button>
+
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleSaveToggle}
-            className="hover:bg-muted"
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border border-border/60 text-muted-foreground hover:text-foreground hover:border-border transition-all"
+            style={{ fontFamily: 'var(--font-mono)' }}
           >
-            {isSaved ? (
-              <BookmarkCheck className="h-4 w-4 mr-2 text-primary" />
-            ) : (
-              <Bookmark className="h-4 w-4 mr-2" />
-            )}
+            {isSaved ? <BookmarkCheck className="h-3.5 w-3.5 text-primary" /> : <Bookmark className="h-3.5 w-3.5" />}
             {isSaved ? "Saved" : "Save"}
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
+          </button>
+          <button
             onClick={handleShare}
-            className="hover:bg-muted"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border border-border/60 text-muted-foreground hover:text-foreground hover:border-border transition-all"
+            style={{ fontFamily: 'var(--font-mono)' }}
           >
-            <Share2 className="h-4 w-4 mr-2" />
+            <Share2 className="h-3.5 w-3.5" />
             Share
-          </Button>
+          </button>
         </div>
       </div>
 
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          {/* Hero Image */}
-          {article.urlToImage && (
-            <div className="relative h-64 md:h-96 overflow-hidden">
-              <img
-                src={article.urlToImage}
-                alt={article.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+      {/* Card */}
+      <div className="news-card">
+        {/* Image */}
+        {article.urlToImage && (
+          <div className="relative h-52 md:h-72 overflow-hidden">
+            <img
+              src={article.urlToImage}
+              alt={article.title}
+              className="w-full h-full object-cover"
+              style={{ filter: 'brightness(0.8) saturate(0.85)' }}
+            />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, hsl(220 14% 13%) 0%, transparent 50%)' }} />
+          </div>
+        )}
+
+        <div className="p-6">
+          {/* Meta */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="source-badge">{article.source.name}</span>
+              {article.region && (
+                <span className="text-xs px-2 py-0.5 rounded border border-border/50 text-muted-foreground" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem' }}>
+                  {article.region === "india" ? "🇮🇳 India" : "🌍 Global"}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)' }}>
+              <Clock className="h-3 w-3" />
+              {formatDate(article.publishedAt)}
+            </div>
+          </div>
+
+          {/* Title */}
+          <h1 className="headline-primary mb-4">{article.title}</h1>
+
+          {/* Description */}
+          {article.description && (
+            <p className="text-sm text-muted-foreground leading-relaxed mb-6">{article.description}</p>
+          )}
+
+          {/* Category */}
+          {article.category && (
+            <div className="mb-5">
+              <span className="category-pill">{article.category.charAt(0).toUpperCase() + article.category.slice(1)}</span>
             </div>
           )}
 
-          <div className="p-6 md:p-8">
-            {/* Source and Date */}
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-sm font-medium text-primary bg-primary-light px-4 py-2 rounded-full">
-                {article.source.name}
-              </span>
-              <div className="flex items-center text-muted-foreground">
-                <Clock className="h-4 w-4 mr-2" />
-                <span className="text-sm">{formatDate(article.publishedAt)}</span>
-              </div>
-            </div>
-
-            {/* Title */}
-            <h1 className="headline-primary mb-6">
-              {article.title}
-            </h1>
-
-            {/* Description */}
-            {article.description && (
-              <div className="prose prose-lg max-w-none mb-8">
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  {article.description}
-                </p>
-              </div>
-            )}
-
-            {/* Category */}
-            {article.category && (
-              <div className="mb-6">
-                <span className="category-pill">
-                  {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
-                </span>
-              </div>
-            )}
-
-            {/* Read More Action */}
-            <div className="pt-6 border-t border-border">
-              <Button
-                onClick={() => window.open(article.url, '_blank', 'noopener,noreferrer')}
-                className="btn-primary"
-              >
-                Read Full Article on {article.source.name}
-                <ExternalLink className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
+          {/* CTA */}
+          <div className="pt-5 border-t border-border/50">
+            <button
+              onClick={() => window.open(article.url, "_blank", "noopener,noreferrer")}
+              className="btn-primary"
+            >
+              Read on {article.source.name}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
