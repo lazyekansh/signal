@@ -1,61 +1,42 @@
 import { useState } from "react";
 import { Search, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
-  placeholder?: string;
   defaultValue?: string;
+  placeholder?: string;
 }
 
-export const SearchBar = ({ 
-  onSearch, 
-  placeholder = "Search news articles...",
-  defaultValue = ""
-}: SearchBarProps) => {
+export const SearchBar = ({ onSearch, defaultValue = "", placeholder = "Search…" }: SearchBarProps) => {
   const [query, setQuery] = useState(defaultValue);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(query.trim());
-  };
-
-  const handleClear = () => {
-    setQuery("");
-    onSearch("");
-  };
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSearch(query.trim()); };
+  const handleClear = () => { setQuery(""); onSearch(""); };
 
   return (
-    <form onSubmit={handleSubmit} className="relative max-w-2xl mx-auto">
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input
+    <form onSubmit={handleSubmit}>
+      <div className="flex items-center gap-2 bg-card border border-border/60 rounded px-3.5 py-2.5 focus-within:border-primary/40 transition-colors">
+        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="search-input pl-12 pr-12 h-12 text-base"
+          className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
         />
         {query && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted"
-            onClick={handleClear}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <button type="button" onClick={handleClear} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="h-3.5 w-3.5" />
+          </button>
         )}
+        <button
+          type="submit"
+          className="text-xs px-2.5 py-1 rounded border border-border/60 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shrink-0"
+          style={{ fontFamily: 'var(--font-mono)' }}
+        >
+          Search
+        </button>
       </div>
-      
-      <Button
-        type="submit"
-        className="btn-primary mt-4 w-full sm:w-auto sm:absolute sm:right-2 sm:top-2 sm:mt-0 sm:h-8"
-      >
-        Search
-      </Button>
     </form>
   );
 };
