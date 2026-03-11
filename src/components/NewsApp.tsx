@@ -8,7 +8,8 @@ import { CategoryFilter } from "./CategoryFilter";
 import { RegionFilter } from "./RegionFilter";
 import { NewsHeader } from "./NewsHeader";
 import { ArticleDetail } from "./ArticleDetail";
-import { LoadingSpinner, LoadingCard } from "./LoadingSpinner";
+import { LoadingCard } from "./LoadingSpinner";
+import { RefreshCw } from "lucide-react";
 
 export const NewsApp = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -25,10 +26,7 @@ export const NewsApp = () => {
   const categories = newsApi.getCategories();
   const regions = newsApi.getRegions();
 
-  // Load articles on component mount and when filters change
-  useEffect(() => {
-    loadArticles();
-  }, [activeCategory, activeRegion, searchQuery]);
+  useEffect(() => { loadArticles(); }, [activeCategory, activeRegion, searchQuery]);
 
   const loadArticles = async () => {
     try {
@@ -39,226 +37,143 @@ export const NewsApp = () => {
         activeRegion === "all" ? undefined : activeRegion
       );
       setArticles(fetchedArticles);
-    } catch (error) {
-      console.error("Error loading articles:", error);
-      toast({
-        title: "Error Loading News",
-        description: "Failed to load articles. Please try again.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Error", description: "Failed to load articles.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setActiveCategory("all"); // Reset category when searching
-    if (query) {
-      setShowSearch(false); // Hide search bar after searching
-    }
-  };
-
-  const handleCategoryChange = (category: string) => {
-    setActiveCategory(category);
-    setSearchQuery(""); // Clear search when changing category
-  };
-
-  const handleRegionChange = (region: string) => {
-    setActiveRegion(region);
-    setSearchQuery(""); // Clear search when changing region
-  };
-
-  const handleSaveArticle = (article: Article) => {
-    const newSavedArticles = [...savedArticles, article];
-    setSavedArticles(newSavedArticles);
-    toast({
-      title: "Article Saved",
-      description: "Article added to your bookmarks.",
-    });
-  };
-
-  const handleRemoveArticle = (articleId: string) => {
-    const newSavedArticles = savedArticles.filter(article => article.id !== articleId);
-    setSavedArticles(newSavedArticles);
-    toast({
-      title: "Article Removed",
-      description: "Article removed from bookmarks.",
-    });
-  };
-
-  const isArticleSaved = (articleId: string) => {
-    return savedArticles.some(article => article.id === articleId);
-  };
+  const handleSearch = (q: string) => { setSearchQuery(q); setActiveCategory("all"); if (q) setShowSearch(false); };
+  const handleCategory = (c: string) => { setActiveCategory(c); setSearchQuery(""); };
+  const handleRegion = (r: string) => { setActiveRegion(r); setSearchQuery(""); };
+  const handleSave = (a: Article) => { setSavedArticles([...savedArticles, a]); toast({ title: "Saved" }); };
+  const handleRemove = (id: string) => { setSavedArticles(savedArticles.filter(a => a.id !== id)); toast({ title: "Removed" }); };
+  const isSaved = (id: string) => savedArticles.some(a => a.id === id);
 
   const displayArticles = showBookmarks ? savedArticles : articles;
+
+  const sectionTitle = () => {
+    if (showBookmarks) return `Saved (${savedArticles.length})`;
+    if (searchQuery) return `Results for "${searchQuery}"`;
+    if (activeRegion !== "all" && activeCategory !== "all") return `${activeRegion} · ${activeCategory}`;
+    if (activeRegion !== "all") return activeRegion === "india" ? "India" : "Global";
+    if (activeCategory !== "all") return activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1);
+    return "Latest";
+  };
 
   if (selectedArticle) {
     return (
       <ArticleDetail
         article={selectedArticle}
         onBack={() => setSelectedArticle(null)}
-        onSave={handleSaveArticle}
-        onRemove={handleRemoveArticle}
-        isSaved={isArticleSaved(selectedArticle.id)}
+        onSave={handleSave}
+        onRemove={handleRemove}
+        isSaved={isSaved(selectedArticle.id)}
       />
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <NewsHeader
         onSearchToggle={() => setShowSearch(!showSearch)}
         onBookmarksToggle={() => setShowBookmarks(!showBookmarks)}
         showBookmarks={showBookmarks}
       />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Search Bar */}
+      <main className="max-w-7xl mx-auto px-5 py-7">
+        {/* Search */}
         {showSearch && (
-          <div className="mb-8 slide-up">
-            <SearchBar
-              onSearch={handleSearch}
-              defaultValue={searchQuery}
-              placeholder="Search breaking news, technology, business..."
-            />
+          <div className="mb-5 slide-up">
+            <SearchBar onSearch={handleSearch} defaultValue={searchQuery} placeholder="Search headlines…" />
           </div>
         )}
 
-        {/* Region Filter */}
+        {/* Filters */}
         {!showBookmarks && (
-          <RegionFilter
-            regions={regions}
-            activeRegion={activeRegion}
-            onRegionChange={handleRegionChange}
-          />
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-5">
+            <RegionFilter regions={regions} activeRegion={activeRegion} onRegionChange={handleRegion} />
+            <div className="w-px h-4 bg-border/50 hidden sm:block" />
+            <CategoryFilter categories={categories} activeCategory={activeCategory} onCategoryChange={handleCategory} />
+          </div>
         )}
 
-        {/* Category Filter */}
-        {!showBookmarks && (
-          <CategoryFilter
-            categories={categories}
-            activeCategory={activeCategory}
-            onCategoryChange={handleCategoryChange}
-          />
-        )}
-
-        {/* Section Title */}
-        <div className="mb-8">
-          <h2 className="headline-secondary">
-            {showBookmarks 
-              ? `Your Bookmarks (${savedArticles.length})`
-              : searchQuery 
-                ? `Search Results for "${searchQuery}"`
-                : (() => {
-                    const regionText = activeRegion === "all" ? "" : 
-                      activeRegion === "india" ? "Indian " : "Global ";
-                    const categoryText = activeCategory === "all" ? 
-                      "News" : `${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} News`;
-                    return activeRegion === "all" && activeCategory === "all" 
-                      ? "Latest News" 
-                      : `${regionText}${categoryText}`;
-                  })()
-            }
-          </h2>
-          
+        {/* Section header */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-sm font-semibold text-foreground">{sectionTitle()}</h2>
+            {!loading && (
+              <span className="text-xs text-muted-foreground font-mono opacity-60">
+                {displayArticles.length} articles
+              </span>
+            )}
+          </div>
           {(searchQuery || activeRegion !== "all" || activeCategory !== "all") && !showBookmarks && (
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setActiveRegion("all");
-                setActiveCategory("all");
-              }}
-              className="text-sm text-muted-foreground hover:text-foreground mt-2 underline"
+              onClick={() => { setSearchQuery(""); setActiveRegion("all"); setActiveCategory("all"); }}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono"
             >
-              Clear all filters and show all news
+              Clear ×
             </button>
           )}
         </div>
 
-        {/* Loading State */}
+        {/* Loading */}
         {loading && !showBookmarks && (
           <div className="news-grid">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <LoadingCard key={index} />
-            ))}
+            {Array.from({ length: 6 }).map((_, i) => <LoadingCard key={i} />)}
           </div>
         )}
 
-        {/* Empty States */}
+        {/* Empty */}
         {!loading && displayArticles.length === 0 && (
-          <div className="text-center py-16">
-            <div className="max-w-md mx-auto">
-              <h3 className="headline-tertiary mb-4">
-                {showBookmarks 
-                  ? "No Bookmarks Yet"
-                  : searchQuery 
-                    ? "No Results Found"
-                    : "No Articles Available"
-                }
-              </h3>
-              <p className="body-text mb-6">
-                {showBookmarks 
-                  ? "Start bookmarking articles you want to read later."
-                  : searchQuery 
-                    ? `No articles found for "${searchQuery}". Try different keywords.`
-                    : "No articles are currently available. Please check back later."
-                }
-              </p>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="btn-primary"
-                >
-                  Browse All News
-                </button>
-              )}
-            </div>
+          <div className="text-center py-20">
+            <p className="text-sm text-muted-foreground">
+              {showBookmarks ? "No saved articles yet." : searchQuery ? `No results for "${searchQuery}".` : "No articles available."}
+            </p>
           </div>
         )}
 
-        {/* Articles Grid */}
+        {/* Grid */}
         {!loading && displayArticles.length > 0 && (
           <div className="news-grid fade-in">
             {displayArticles.map((article) => (
               <NewsCard
                 key={article.id}
                 article={article}
-                onSave={handleSaveArticle}
-                onRemove={handleRemoveArticle}
-                isSaved={isArticleSaved(article.id)}
+                onSave={handleSave}
+                onRemove={handleRemove}
+                isSaved={isSaved(article.id)}
                 onClick={setSelectedArticle}
               />
             ))}
           </div>
         )}
 
-        {/* Load More Button - Future Enhancement */}
+        {/* Refresh */}
         {!loading && !showBookmarks && displayArticles.length > 0 && (
-          <div className="text-center mt-12">
-            <button
-              onClick={loadArticles}
-              className="btn-secondary"
-            >
-              Refresh Articles
+          <div className="text-center mt-10">
+            <button onClick={loadArticles} className="btn-secondary">
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
             </button>
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-subtle border-t border-border mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center">
-            <p className="caption-text">
-              NewsHub Pro - Professional news aggregation platform
-            </p>
-            <p className="caption-text mt-2">
-              Built with React, TypeScript, and Tailwind CSS
-            </p>
-          </div>
+      <footer className="border-t border-border/40 mt-16" style={{ background: 'hsl(220 14% 9%)' }}>
+        <div className="max-w-7xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span className="text-xs text-muted-foreground font-mono opacity-60">Signal · News Aggregator</span>
+          <a
+            href="https://ek4nsh.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground font-mono opacity-60 hover:opacity-100 hover:text-foreground transition-all"
+          >
+            @lazyekansh · ek4nsh.in
+          </a>
         </div>
       </footer>
     </div>
