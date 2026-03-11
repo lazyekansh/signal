@@ -1,46 +1,31 @@
 import { useState, useEffect } from "react";
 import { Sun, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export const ThemeToggle = () => {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" || "light";
-    setTheme(savedTheme);
-    
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    const saved = (localStorage.getItem("theme") as "light" | "dark") || "dark";
+    setTheme(saved);
+    document.documentElement.classList.toggle("dark", saved === "dark");
+    document.documentElement.classList.toggle("light", saved === "light");
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+  const toggle = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    document.documentElement.classList.toggle("light", next === "light");
   };
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={toggleTheme}
-      className="h-9 w-9 p-0 hover:bg-muted"
-      aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+    <button
+      onClick={toggle}
+      className="h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all"
+      aria-label="Toggle theme"
     >
-      {theme === "light" ? (
-        <Moon className="h-4 w-4" />
-      ) : (
-        <Sun className="h-4 w-4" />
-      )}
-    </Button>
+      {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+    </button>
   );
 };
